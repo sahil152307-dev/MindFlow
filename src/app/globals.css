@@ -1,0 +1,296 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+
+@custom-variant dark (&:is(.dark *));
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --font-sans: "Inter Variable", ui-sans-serif, system-ui, -apple-system, sans-serif;
+  --font-display: "Fraunces Variable", ui-serif, Georgia, serif;
+  --color-sidebar-ring: var(--sidebar-ring);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar: var(--sidebar);
+  --color-chart-5: var(--chart-5);
+  --color-chart-4: var(--chart-4);
+  --color-chart-3: var(--chart-3);
+  --color-chart-2: var(--chart-2);
+  --color-chart-1: var(--chart-1);
+  --color-ring: var(--ring);
+  --color-input: var(--input);
+  --color-border: var(--border);
+  --color-destructive: var(--destructive);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-accent: var(--accent);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-muted: var(--muted);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-secondary: var(--secondary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-primary: var(--primary);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-popover: var(--popover);
+  --color-card-foreground: var(--card-foreground);
+  --color-card: var(--card);
+  --radius-sm: calc(var(--radius) - 6px);
+  --radius-md: calc(var(--radius) - 3px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 6px);
+  --radius-2xl: calc(var(--radius) + 12px);
+
+  /* —– MindFlow pastel palette (semantic utilities) –— */
+  --color-sage-soft: var(--sage-soft);
+  --color-sage: var(--sage);
+  --color-sage-deep: var(--sage-deep);
+  --color-honey-soft: var(--honey-soft);
+  --color-honey: var(--honey);
+  --color-honey-deep: var(--honey-deep);
+  --color-rose-soft: var(--rose-soft);
+  --color-rose: var(--rose);
+  --color-rose-deep: var(--rose-deep);
+  --color-lilac-soft: var(--lilac-soft);
+  --color-lilac: var(--lilac);
+  --color-lilac-deep: var(--lilac-deep);
+  --color-peach-soft: var(--peach-soft);
+  --color-peach-deep: var(--peach-deep);
+  --color-cream: var(--cream);
+}
+
+/* ————————————————————————————————
+   MindFlow · "Soft Focus" light theme
+   Warm cream base, sage primary, honey &
+   rose accents. Designed to be gentle on
+   sensory-sensitive users: low contrast
+   borders, no harsh reds, no pure black.
+———————————————————————————————— */
+:root {
+  --radius: 1.125rem;
+
+  --background: oklch(0.981 0.009 92);
+  --foreground: oklch(0.335 0.014 78);
+
+  --card: oklch(0.996 0.004 95);
+  --card-foreground: oklch(0.335 0.014 78);
+
+  --popover: oklch(0.996 0.004 95);
+  --popover-foreground: oklch(0.335 0.014 78);
+
+  --primary: oklch(0.545 0.058 150);
+  --primary-foreground: oklch(0.985 0.005 120);
+
+  --secondary: oklch(0.943 0.022 140);
+  --secondary-foreground: oklch(0.415 0.062 150);
+
+  --muted: oklch(0.955 0.009 90);
+  --muted-foreground: oklch(0.512 0.018 80);
+
+  --accent: oklch(0.932 0.028 300);
+  --accent-foreground: oklch(0.442 0.088 300);
+
+  --destructive: oklch(0.58 0.115 32);
+  --border: oklch(0.912 0.013 88);
+  --input: oklch(0.912 0.013 88);
+  --ring: oklch(0.615 0.062 150);
+
+  --chart-1: oklch(0.62 0.07 150);
+  --chart-2: oklch(0.78 0.1 85);
+  --chart-3: oklch(0.68 0.08 330);
+  --chart-4: oklch(0.75 0.08 60);
+  --chart-5: oklch(0.72 0.07 20);
+
+  --sidebar: oklch(0.975 0.01 92);
+  --sidebar-foreground: oklch(0.335 0.014 78);
+  --sidebar-primary: oklch(0.545 0.058 150);
+  --sidebar-primary-foreground: oklch(0.985 0.005 120);
+  --sidebar-accent: oklch(0.943 0.022 140);
+  --sidebar-accent-foreground: oklch(0.415 0.062 150);
+  --sidebar-border: oklch(0.912 0.013 88);
+  --sidebar-ring: oklch(0.615 0.062 150);
+
+  /* Pastel accents */
+  --sage-soft: oklch(0.937 0.023 145);
+  --sage: oklch(0.672 0.062 150);
+  --sage-deep: oklch(0.438 0.062 152);
+  --honey-soft: oklch(0.955 0.045 90);
+  --honey: oklch(0.812 0.115 88);
+  --honey-deep: oklch(0.523 0.095 75);
+  --rose-soft: oklch(0.945 0.024 20);
+  --rose: oklch(0.79 0.062 20);
+  --rose-deep: oklch(0.527 0.088 25);
+  --lilac-soft: oklch(0.943 0.028 310);
+  --lilac: oklch(0.782 0.072 310);
+  --lilac-deep: oklch(0.5 0.1 308);
+  --peach-soft: oklch(0.955 0.032 70);
+  --peach-deep: oklch(0.562 0.095 60);
+  --cream: oklch(0.973 0.012 90);
+}
+
+/* ————————————————————————————————
+   "Evening" dark theme — warm dim cocoa,
+   never blue-black. Softer pastels.
+———————————————————————————————— */
+.dark {
+  --background: oklch(0.235 0.008 75);
+  --foreground: oklch(0.925 0.008 90);
+
+  --card: oklch(0.277 0.01 78);
+  --card-foreground: oklch(0.925 0.008 90);
+
+  --popover: oklch(0.277 0.01 78);
+  --popover-foreground: oklch(0.925 0.008 90);
+
+  --primary: oklch(0.742 0.062 150);
+  --primary-foreground: oklch(0.213 0.022 152);
+
+  --secondary: oklch(0.322 0.024 145);
+  --secondary-foreground: oklch(0.85 0.04 148);
+
+  --muted: oklch(0.312 0.012 80);
+  --muted-foreground: oklch(0.712 0.014 85);
+
+  --accent: oklch(0.33 0.035 308);
+  --accent-foreground: oklch(0.83 0.055 308);
+
+  --destructive: oklch(0.685 0.1 32);
+  --border: oklch(0.34 0.012 80);
+  --input: oklch(0.34 0.012 80);
+  --ring: oklch(0.742 0.062 150);
+
+  --chart-1: oklch(0.742 0.062 150);
+  --chart-2: oklch(0.82 0.09 85);
+  --chart-3: oklch(0.74 0.075 330);
+  --chart-4: oklch(0.8 0.075 60);
+  --chart-5: oklch(0.74 0.065 20);
+
+  --sidebar: oklch(0.258 0.009 78);
+  --sidebar-foreground: oklch(0.925 0.008 90);
+  --sidebar-primary: oklch(0.742 0.062 150);
+  --sidebar-primary-foreground: oklch(0.213 0.022 152);
+  --sidebar-accent: oklch(0.322 0.024 145);
+  --sidebar-accent-foreground: oklch(0.85 0.04 148);
+  --sidebar-border: oklch(0.34 0.012 80);
+  --sidebar-ring: oklch(0.742 0.062 150);
+
+  --sage-soft: oklch(0.33 0.026 148);
+  --sage: oklch(0.742 0.062 150);
+  --sage-deep: oklch(0.845 0.055 150);
+  --honey-soft: oklch(0.34 0.035 88);
+  --honey: oklch(0.812 0.1 88);
+  --honey-deep: oklch(0.862 0.095 82);
+  --rose-soft: oklch(0.34 0.028 22);
+  --rose: oklch(0.76 0.058 22);
+  --rose-deep: oklch(0.84 0.055 25);
+  --lilac-soft: oklch(0.34 0.032 310);
+  --lilac: oklch(0.762 0.068 310);
+  --lilac-deep: oklch(0.835 0.06 308);
+  --peach-soft: oklch(0.35 0.03 68);
+  --peach-deep: oklch(0.835 0.08 62);
+  --cream: oklch(0.28 0.01 85);
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  html {
+    scroll-behavior: smooth;
+  }
+  body {
+    @apply bg-background text-foreground font-sans antialiased;
+    font-feature-settings: "cv11", "ss01";
+    text-rendering: optimizeLegibility;
+  }
+  ::selection {
+    background: color-mix(in oklch, var(--sage) 30%, transparent);
+  }
+  /* Gentle warm scrollbar */
+  ::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+  }
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  ::-webkit-scrollbar-thumb {
+    background: color-mix(in oklch, var(--foreground) 14%, transparent);
+    border-radius: 999px;
+    border: 3px solid var(--background);
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background: color-mix(in oklch, var(--foreground) 24%, transparent);
+  }
+}
+
+@layer utilities {
+  /* Display serif with Fraunces optical softness */
+  .font-display {
+    font-family: var(--font-display);
+    font-variation-settings: "opsz" auto, "SOFT" 40, "WONK" 0;
+    letter-spacing: -0.015em;
+  }
+  .text-harmony {
+    text-wrap: pretty;
+  }
+  .num {
+    font-variant-numeric: tabular-nums;
+    font-feature-settings: "tnum";
+  }
+  /* Soft layered warm shadow */
+  .shadow-soft {
+    box-shadow:
+      0 1px 2px oklch(0.335 0.014 78 / 0.04),
+      0 4px 12px oklch(0.335 0.014 78 / 0.05);
+  }
+  .shadow-lift {
+    box-shadow:
+      0 2px 4px oklch(0.335 0.014 78 / 0.05),
+      0 12px 28px oklch(0.335 0.014 78 / 0.09);
+  }
+  /* Calm ambience — barely-there radial washes */
+  .calm-bg {
+    background-image:
+      radial-gradient(
+        52rem 30rem at 12% -6%,
+        color-mix(in oklch, var(--sage) 14%, transparent),
+        transparent 62%
+      ),
+      radial-gradient(
+        46rem 26rem at 88% 4%,
+        color-mix(in oklch, var(--lilac) 16%, transparent),
+        transparent 58%
+      ),
+      radial-gradient(
+        40rem 24rem at 55% 108%,
+        color-mix(in oklch, var(--honey) 12%, transparent),
+        transparent 60%
+      );
+  }
+  /* Hairline divider that fades at the ends */
+  .fade-rule {
+    background: linear-gradient(
+      to right,
+      transparent,
+      var(--border) 18%,
+      var(--border) 82%,
+      transparent
+    );
+    height: 1px;
+  }
+}
+
+/* Respect users who prefer stillness */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
