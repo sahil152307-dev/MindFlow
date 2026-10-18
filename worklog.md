@@ -158,3 +158,16 @@ Stage Summary:
   6. Five modes (Plan My Day / I'm Stuck / Low Energy / Motivated / Rest) — all E2E tested
   7. Shared parts (courses, assignments, due dates, micro-steps, accept/edit/skip everywhere)
 - Architecture: Next.js 16 + Tailwind 4 + shadcn/ui; API routes (FastAPI role); z-ai-web-dev-sdk LLM+VLM (Gemini role); Prisma/SQLite (Firestore role); base64 proof store (Storage role)
+
+---
+Task ID: phase-9
+Agent: main (Z.ai)
+Task: Create project README.md
+
+Work Log:
+- Read worklog (all 8 phases) + package.json + verified every API route's HTTP methods via grep before writing
+- Wrote /home/z/my-project/README.md: philosophy & anti-shame contract, all features, 5 modes table, reward economy rules, tech stack + PRD/TRD mapping table, architecture diagram, data model, full API reference (verified against actual route exports), design system (Fraunces/Inter, Soft Focus/Evening palettes), project tree, getting started, AI fallback chain, accessibility notes, screenshot index, honest scope & trade-offs
+- No emojis; tone matches the app (calm, professional, zero shame language)
+
+Stage Summary:
+- Deliverable: /home/z/my-project/README.md (~380 lines), fully accurate to the shipped codebase
