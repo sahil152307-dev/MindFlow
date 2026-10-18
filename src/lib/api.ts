@@ -7,8 +7,11 @@ import type {
   EnergyLevel,
   EnergyLog,
   Goodie,
+  InsightsResponse,
+  NowResponse,
   PlannerMode,
   ProofRecord,
+  Recommendation,
   SessionUser,
   Task,
   Wallet,
@@ -195,6 +198,15 @@ class Api {
   /* ——— planning & modes ——— */
   generatePlan(energy: EnergyLevel) {
     return this.post<{ plan: DayPlan }>("/plan", { energy });
+  }
+  getNow() {
+    return this.get<NowResponse>("/now");
+  }
+  getRecommendation() {
+    return this.get<{ recommendation: Recommendation }>("/ai/recommend");
+  }
+  getInsights() {
+    return this.get<InsightsResponse>("/insights");
   }
   logMode(mode: PlannerMode) {
     return this.post<{ ok: boolean }>("/modes", { mode }).catch(() => ({ ok: false }));

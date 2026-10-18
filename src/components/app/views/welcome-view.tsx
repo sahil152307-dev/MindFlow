@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { motion } from "framer-motion";
-import { Loader2, Sparkles, Wind, Coins } from "lucide-react";
+import { Compass, Loader2, Sparkles, Wind, Coins } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Logo } from "@/components/app/logo";
@@ -27,14 +27,14 @@ const FEATURES = [
   { icon: Coins, label: "Proof rewards" },
 ];
 
-export function WelcomeView() {
+export function WelcomeView({ onTourStart }: { onTourStart?: () => void }) {
   const setUser = useMindFlow((s) => s.setUser);
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
-  const [busy, setBusy] = useState<"fresh" | "sample" | null>(null);
+  const [busy, setBusy] = useState<"fresh" | "sample" | "tour" | null>(null);
   const [error, setError] = useState<string | null>(null);
 
-  async function enter(withSample: boolean) {
+  async function enter(withSample: boolean, tour = false) {
     setError(null);
     if (!name.trim()) {
       setError("What should we call you?");
@@ -45,16 +45,20 @@ export function WelcomeView() {
       return;
     }
     setBusy(withSample ? "sample" : "fresh");
+    if (tour) setBusy("tour");
     try {
       const res = await api.login(name.trim(), email.trim(), withSample);
       const u: SessionUser = res.user;
       api.setUid(u.id);
       setUser(u);
       toast(
-        withSample
-          ? `Welcome in, ${u.name.split(" ")[0]} — we set up a sample semester to explore. 🌿`
-          : `Welcome, ${u.name.split(" ")[0]}. Empty canvas, zero pressure. 🌱`
+        tour
+          ? `Welcome in, ${u.name.split(" ")[0]} — let's walk through it together. 🌿`
+          : withSample
+            ? `Welcome in, ${u.name.split(" ")[0]} — we set up a sample semester to explore. 🌿`
+            : `Welcome, ${u.name.split(" ")[0]}. Empty canvas, zero pressure. 🌱`
       );
+      if (tour) onTourStart?.();
     } catch (e) {
       setError(e instanceof Error ? e.message : "Couldn't sign you in. Try again?");
     } finally {
@@ -171,6 +175,23 @@ export function WelcomeView() {
                 <Loader2 className="h-4 w-4 animate-spin" />
               ) : (
                 <>Explore with sample data 🌿</>
+              )}
+            </Button>
+
+            <Button
+              type="button"
+              variant="ghost"
+              disabled={busy !== null}
+              onClick={() => enter(true, true)}
+              className="h-11 w-full rounded-2xl text-sm font-medium text-lilac-deep transition hover:bg-lilac-soft/40"
+            >
+              {busy === "tour" ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                <>
+                  <Compass className="mr-1.5 h-4 w-4" aria-hidden /> Take the
+                  2-minute tour
+                </>
               )}
             </Button>
           </motion.form>

@@ -114,6 +114,29 @@ Minimal, soothing, pastel-first design with a warm cream base, sage primary, and
 accents. A warm-cocoa dark mode ("Evening") — deliberately not blue-black. Generous spacing, soft
 shadows, rounded 1.125rem radii, and staggered, gentle motion. See [Design System](#design-system).
 
+### 7. The Intelligence Layer (v2)
+
+- **Smart Priority / Auto Planning** — a dedicated scoring engine (`src/lib/priority.ts`)
+  where kindness is a weight: heavily-rolled tasks drift *down* (nagging is unkind) and point
+  toward "shrink it" instead. Every suggestion carries 1–2 gentle "why" chips
+  ("Gentle on a low-energy day", "Due in 1 day", "Rolled 3× — shrinking it might help").
+- **"What should I do now?"** — the decision-paralysis valve. One tap returns ≤3 deduped
+  options (the gentle one / the useful one / the five-minute one), time-of-day aware, with a
+  soft sage glow that scrolls to the chosen card. If nothing is small enough, it offers to
+  AI-shrink something instead.
+- **AI Adaptive Recommendation ("Today's gentle read")** — an LLM reads the whole context
+  (energy trend, streak, workload, mode habits) and writes one short, kind paragraph with a
+  micro-action. Falls back to honest templates when offline — the read never disappears.
+  "Not today" hides it until tomorrow.
+- **Student Insights & Analytics** — "patterns, never grades": 14-day energy and completion
+  charts (gaps are honest — no check-in is allowed), weekly mode usage, and rule-based gentle
+  pattern lines. No red, no targets anywhere in the view.
+- **Personalized Dashboard** — the Today header carries at-a-glance chips: n-day flow,
+  open today, and X/Y spoons planned (turns soft peach when over capacity — never red).
+- **Guided Demo Flow** — a 2-minute tour from the welcome screen that walks the real app
+  (it genuinely navigates to Insights and Rewards), with skip-anytime copy: "nothing here is
+  a test."
+
 ---
 
 ## The Five Adaptive Modes
@@ -232,9 +255,12 @@ Prisma schema at `prisma/schema.prisma`:
 | POST | `/api/tasks/[id]/rollover` | Gentle roll to tomorrow (`rolledCount` + 1, kind message) |
 | POST | `/api/tasks/[id]/proof` | Image in → VLM verify → +10 coins (always) |
 | GET / POST | `/api/energy` | Today's check-in / upsert |
-| POST | `/api/plan` | Spoon-capacity plan (low 2 / medium 4 / high 7) |
+| POST | `/api/plan` | Spoon-capacity plan via the priority engine — reason chips included |
 | GET / POST | `/api/modes` | Weekly usage counts / log a mode use |
 | POST | `/api/ai/breakdown` | LLM micro-sequencing → `{microSteps, encouragement, source}` |
+| GET | `/api/now` | "What should I do now?" — ≤3 deduped options + shrink offer |
+| GET | `/api/ai/recommend` | "Today's gentle read" — whole-context LLM recommendation, heuristic fallback |
+| GET | `/api/insights` | 14-day energy/completion series, weekly modes, study stats, gentle patterns |
 | GET | `/api/rewards` | Wallet, proof gallery, goodie shelf, weekly insights |
 | POST | `/api/goodies/claim` | Transactional claim with balance guard |
 | GET | `/api` | Health check |
@@ -248,8 +274,9 @@ All endpoints return JSON and rely on the session cookie plus a `userId` query f
 This is where the "don't look vibe-coded" requirement was taken seriously.
 
 ### Typography
-- **Fraunces Variable** (display serif) — headlines, view titles, the wordmark's softer moments
-- **Inter Variable** (UI sans) — body, controls, tables
+- **Fraunces Variable** (display serif, full variable axes) — headlines, view titles, the wordmark's softer moments
+  - True optical sizing (`opsz 9–144`) via the full axis build; soft terminals (SOFT 40) active
+- **Instrument Sans Variable** (UI sans) — body, controls, tables; warmer than the default-grotesque look, beautiful numerals for wallet/stat contexts
 - Both self-hosted via Fontsource — **zero network dependency**, no FOUT, offline-safe
 - Numerals are styled with `font-variant-numeric: tabular-nums` in stat contexts (`.num` utility)
 
@@ -390,6 +417,11 @@ Every AI surface in the UI is lilac-tinted and labeled, so it's always clear wha
 | Fresh-user AI breakdown | `download/phase8-fresh-breakdown.png` |
 | Dark mode ("Evening") | `download/phase8-darkmode.png` |
 | Mobile 390px | `download/phase8-mobile-final2.png` |
+| Reason chips on suggestions | `download/phase11-chips.png` |
+| "What now?" sheet + sage glow | `download/phase12-glow.png` |
+| AI gentle read card | `download/phase13-read.png` |
+| Insights view (charts + patterns) | `download/phase14-insights.png` |
+| Personalized dashboard chips | `download/phase15-spoonchip.png` |
 
 ---
 

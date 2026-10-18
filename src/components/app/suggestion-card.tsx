@@ -7,22 +7,32 @@ import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { api } from "@/lib/api";
-import type { SpoonCost, Task } from "@/lib/types";
+import type { ReasonChip, SpoonCost, Task } from "@/lib/types";
 import { SpoonDots } from "@/components/app/spoon-ui";
 import { dueLabel } from "@/lib/format";
+
+const CHIP_TONES: Record<ReasonChip["tone"], string> = {
+  sage: "bg-sage-soft/80 text-sage-deep",
+  honey: "bg-honey-soft/80 text-honey-deep",
+  lilac: "bg-lilac-soft/80 text-lilac-deep",
+  peach: "bg-peach-soft/80 text-peach-deep",
+};
 
 /**
  * A suggested task with the PRD's accept / edit / skip controls.
  * Skipping is always okay — no task is ever punished for it.
+ * The "why" chips explain the priority engine's thinking.
  */
 export function SuggestionCard({
   task,
   reason,
+  reasons,
   onAccepted,
   onSkipped,
 }: {
   task: Task;
   reason: string;
+  reasons?: ReasonChip[];
   onAccepted: (t: Task) => void;
   onSkipped: (t: Task) => void;
 }) {
@@ -72,9 +82,22 @@ export function SuggestionCard({
               {title}
             </h3>
           )}
-          <p className="mt-1 text-xs italic leading-relaxed text-lilac-deep/80">
-            {reason}
-          </p>
+          {reasons && reasons.length > 0 ? (
+            <div className="mt-1.5 flex flex-wrap gap-1.5">
+              {reasons.map((r) => (
+                <span
+                  key={r.text}
+                  className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-[0.6875rem] font-medium leading-4 ${CHIP_TONES[r.tone]}`}
+                >
+                  {r.text}
+                </span>
+              ))}
+            </div>
+          ) : (
+            <p className="mt-1 text-xs italic leading-relaxed text-lilac-deep/80">
+              {reason}
+            </p>
+          )}
           <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1">
             <SpoonDots cost={task.spoonCost as SpoonCost} />
             {due && <span className="text-xs text-muted-foreground">{due.text}</span>}

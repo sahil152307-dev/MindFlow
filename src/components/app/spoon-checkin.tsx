@@ -84,7 +84,7 @@ export function SpoonCheckIn({
           <Button
             variant="ghost"
             size="sm"
-            className="h-8 gap-1.5 rounded-full px-3 text-xs text-muted-foreground"
+            className="mt-0.5 h-8 gap-1.5 rounded-full px-3 text-xs text-muted-foreground"
             onClick={() => onChecked(current, true)}
             title="Re-check-in any time"
           >

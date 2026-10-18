@@ -6,6 +6,8 @@ import {
   CalendarHeart,
   Check,
   ChevronDown,
+  Flame,
+  ListTodo,
   Loader2,
   Plus,
   Sparkles,
@@ -18,11 +20,14 @@ import { api } from "@/lib/api";
 import { useMindFlow } from "@/lib/store";
 import { friendlyDate, greetingFor } from "@/lib/format";
 import type { DayPlan, EnergyLog, SpoonCost, Task } from "@/lib/types";
+import { CAPACITY } from "@/lib/types";
 import { SpoonCheckIn } from "@/components/app/spoon-checkin";
 import { TaskCard } from "@/components/app/task-card";
 import { SuggestionCard } from "@/components/app/suggestion-card";
 import { BreakdownSheet } from "@/components/app/breakdown-sheet";
 import { ModeLauncher } from "@/components/app/mode-launcher";
+import { NowCard } from "@/components/app/now-sheet";
+import { GentleReadCard } from "@/components/app/gentle-read-card";
 import { ProofButton } from "@/components/app/proof-button";
 import { SpoonDots, SpoonGlyph } from "@/components/app/spoon-ui";
 
@@ -266,6 +271,14 @@ export function TodayView() {
   }
 
   const openToday = useMemo(() => todayTasks, [todayTasks]);
+  /* spoons currently planned vs today's capacity (dashboard chip) */
+  const plannedSpoons = useMemo(
+    () =>
+      openToday
+        .filter((t) => t.status === "todo" || t.status === "doing")
+        .reduce((s, t) => s + t.spoonCost, 0),
+    [openToday]
+  );
   const allOpenTasks = useMemo(
     () => [...todayTasks, ...overdue, ...backlog],
     [todayTasks, overdue, backlog]
@@ -277,6 +290,15 @@ export function TodayView() {
     plan === null &&
     overdue.length === 0;
 
+  /* Scroll to a task card and give it a soft sage glow */
+  const focusTask = useCallback((id: string) => {
+    const el = document.querySelector(`[data-task-id="${id}"]`);
+    if (!el) return;
+    el.scrollIntoView({ behavior: "smooth", block: "center" });
+    el.classList.add("now-pulse");
+    window.setTimeout(() => el.classList.remove("now-pulse"), 3400);
+  }, []);
+
   if (loading) {
     return (
       <div className="flex min-h-[50vh] items-center justify-center" role="status" aria-label="Loading today">
@@ -287,9 +309,9 @@ export function TodayView() {
 
   return (
     <div className="space-y-6">
-      {/* ——— greeting ——— */}
+      {/* ——— greeting + personalized dashboard strip ——— */}
       <header className="flex flex-wrap items-end justify-between gap-3">
-        <div>
+        <div className="min-w-0">
           <h1 className="font-display text-[1.75rem] font-semibold leading-tight sm:text-3xl">
             {greeting}, {firstName}{" "}
             <span aria-hidden className="text-sage">
@@ -306,6 +328,37 @@ export function TodayView() {
                   : "high energy — bigger gentle bites"
               : "check in below to shape today"}
           </p>
+          {/* dashboard chips: a soft at-a-glance of the day */}
+          <div className="mt-3 flex flex-wrap items-center gap-2">
+            <span className="inline-flex items-center gap-1.5 rounded-full border border-sage/30 bg-sage-soft/40 px-3 py-1 text-xs font-semibold text-sage-deep">
+              <Flame className="h-3.5 w-3.5" aria-hidden />
+              <span className="num">{user?.streakDays ?? 0}</span>-day flow
+            </span>
+            <span className="inline-flex items-center gap-1.5 rounded-full border border-honey/40 bg-honey-soft/40 px-3 py-1 text-xs font-semibold text-honey-deep">
+              <ListTodo className="h-3.5 w-3.5" aria-hidden />
+              <span className="num">{openToday.filter((t) => t.status !== "done").length}</span>{" "}
+              open today
+            </span>
+            {energy && (
+              <span
+                className={cn(
+                  "inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-xs font-semibold",
+                  plannedSpoons > CAPACITY[energy.level]
+                    ? "border-peach/40 bg-peach-soft/40 text-peach-deep"
+                    : "border-lilac/40 bg-lilac-soft/40 text-lilac-deep"
+                )}
+              >
+                <SpoonGlyph className="h-3.5 w-3.5" aria-hidden />
+                <span className="num">
+                  {plannedSpoons}/{CAPACITY[energy.level]}
+                </span>{" "}
+                spoons planned
+                {plannedSpoons > CAPACITY[energy.level] && (
+                  <span className="font-normal opacity-80">— pick what matters</span>
+                )}
+              </span>
+            )}
+          </div>
         </div>
         {wins.length > 0 && (
           <button
@@ -340,10 +393,25 @@ export function TodayView() {
         onTasksChanged={() => void refresh()}
       />
 
-      <div className="grid gap-6 lg:grid-cols-5">
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-5">
         {/* ——— left column ——— */}
         <div className="space-y-6 lg:col-span-2">
           <SpoonCheckIn current={energy} onChecked={onChecked} />
+
+          <NowCard
+            openCount={allOpenTasks.length}
+            onFocusTask={focusTask}
+            onTasksChanged={() => void refresh()}
+            onBreakdown={(t) =>
+              setBreakdown({
+                taskId: t.id,
+                title: t.title,
+                assignmentId: t.assignmentId,
+              })
+            }
+          />
+
+          <GentleReadCard />
 
           {showPlanCta && (
             <motion.section
@@ -395,6 +463,7 @@ export function TodayView() {
                 {overdue.map((t) => (
                   <li
                     key={t.id}
+                    data-task-id={t.id}
                     className="rounded-2xl border border-border/60 bg-background/60 p-3.5"
                   >
                     <div className="flex items-start justify-between gap-2">
@@ -503,6 +572,7 @@ export function TodayView() {
                         key={s.task.id}
                         task={s.task}
                         reason={s.reason}
+                        reasons={s.reasons}
                         onAccepted={acceptSuggestion}
                         onSkipped={skipSuggestion}
                       />

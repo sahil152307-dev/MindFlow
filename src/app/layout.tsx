@@ -1,8 +1,8 @@
 import type { Metadata, Viewport } from "next";
 import { ThemeProvider } from "next-themes";
 import { Toaster } from "@/components/ui/sonner";
-import "@fontsource-variable/fraunces";
-import "@fontsource-variable/inter";
+import "@fontsource-variable/fraunces/full.css";
+import "@fontsource-variable/instrument-sans";
 import "./globals.css";
 
 export const metadata: Metadata = {

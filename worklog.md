@@ -188,3 +188,130 @@ Work Log:
 Stage Summary:
 - Repo now ships: README.md, CONTRIBUTING.md, LICENSE (MIT), docs/ GitHub Pages site (zero-config publish)
 - License decision left user-side by design: MIT default, one-file swap to proprietary documented in README
+
+---
+Task ID: phase-10
+Agent: main (Z.ai)
+Task: Typography glow-up — warmer UI font, real optical sizing, refined base layer
+
+Work Log:
+- User brief: "present aesthetics par hi banana" + "font style better krna" — same design language, better type
+- Installed @fontsource-variable/instrument-sans (5.3.0); removed @fontsource-variable/inter
+- layout.tsx: Fraunces import switched to /full.css (activates opsz 9-144 + SOFT + WONK axes, previously wght-only); Inter → Instrument Sans
+- globals.css: --font-sans → "Instrument Sans Variable"; body line-height 1.6; dropped Inter-only cv11/ss01 feature settings
+- FIXED latent CSS bug: `.font-display` had `font-variation-settings: "opsz" auto` — "auto" is invalid there (numbers only), which dropped the WHOLE declaration, so SOFT 40 / WONK 0 never applied. Now: valid font-variation-settings ("SOFT" 40, "WONK" 0) + separate font-optical-sizing: auto
+- Verified via agent-browser computed styles: body = "Instrument Sans Variable", display = "Fraunces Variable", fontOpticalSizing = auto, line-height 25.6px (16×1.6); compile clean, zero console errors; desktop + 390px screenshots saved (phase10-typography.png, phase10-mobile.png)
+
+Stage Summary:
+- Pairing now Fraunces (display, true optical sizing + soft terminals finally active) + Instrument Sans (UI, warmer than Inter, more character than default-grotesque look)
+- No out-of-range weights in codebase (grep verified); bundle unchanged in size class
+
+---
+Task ID: phase-11
+Agent: main (Z.ai)
+Task: Smart Priority / Auto Planning — dedicated engine + gentle "why" chips
+
+Work Log:
+- Created src/lib/priority.ts — pure scoring engine: dueFactor (overdue capped at 34, no siren), energyFactor (per-level spoon fit weights), microFactor, rollFactor (anti-shame: rolled 3×+ → -18 + "shrinking it might help" chip instead of nagging), position tie-breaker, today-nudge. CAPACITY/MAX_TASKS exported here now
+- scoreCandidate returns score + top-2 reason chips sorted by weight (always ≥1 via "Fits today's energy" fallback); buildPlan fills within capacity, single-2-spoon-low-day exception + never-empty fallback preserved
+- Rewrote /api/plan: uses engine, returns PlanSuggestion with both reason (string, back-compat) + reasons (chips); fixed empty-basket capacity hardcode → CAPACITY[level]
+- types.ts: added ReasonChip + PlanSuggestion.reasons
+- suggestion-card.tsx: chips row (rounded-full, tone-tinted bg-{tone}-soft text-{tone}-deep — tokens flip per theme), italic reason line as graceful fallback
+- today-view: passes reasons through
+- curl-verified across all 3 levels: low=2 tasks/2 spoons, medium=3/4, high=5/7 — capacity respected, chips contextual ("Gentle on a low-energy day", "Due in 1 day" honey, significance-ordered)
+- Browser E2E: sample login → Rest mode (cleared today) → Low check-in → suggestion panel rendered with chips in a11y tree; screenshot phase11-chips.png; zero console errors
+
+Stage Summary:
+- Auto-planning now explainable: every suggestion carries 1-2 gentle "why" chips; anti-shame is a weight, not copy
+- Next: Phase 12 — "What should I do now?" shortlist sheet
+
+---
+Task ID: phase-12
+Agent: main (Z.ai)
+Task: "What should I do now?" — decision-paralysis valve (API + sheet + focus glow)
+
+Work Log:
+- New GET /api/now: timeOfDay context (morning/afternoon/evening/night), energy from today's log, open candidates via real priority engine; returns ≤3 deduped options (gentlest = lightest+earliest-due, useful = engine top, fivemin = micro/1-spoon preferred) each with reason chips + breakdownTarget when no quick win exists
+- FIX during testing: onToday flag was true for OVERDUE tasks (plannedDate ≤ today) → "Show me" targeted a card that didn't exist (overdue items live in Taking-its-time, not TaskCards). Added explicit planned: "today"|"overdue"|"unplanned" semantics; pick() now brings overdue/unplanned into today gently ("Bring it into today & show me")
+- now-sheet.tsx: NowCard CTA (sage, Signpost icon, only when open tasks exist) + bottom Sheet — time-of-day copy bank, low-energy/unchecked-in notes, option cards with kind labels (The gentle/useful/five-minute one), spoon dots, soft due labels, reason chips, per-card pick action; lilac "Nothing five-minute-sized yet" → Shrink it for me hands off to BreakdownSheet
+- TaskCard root + Taking-its-time li items got data-task-id; focusTask() scrollIntoView + .now-pulse CSS keyframe (sage ring, 3 loops, reduced-motion safe via global rule)
+- api.ts: getNow(); types: NowOption/NowResponse
+- E2E verified: sheet opens w/ afternoon copy, dedupe collapse (1 card + shrink offer), "Bring it into today" → refresh → TaskCard render → scroll + pulseNow:true; Shrink hand-off → real LLM 5 steps ("Add 5 steps to today"); zero errors; screenshots phase12-focus/glow/sheet.png
+
+Stage Summary:
+- Paralysis relief is one tap away: context-aware shortlist, kind copy, sage glow focus, AI fallback when nothing is small enough
+- Next: Phase 13 — AI Adaptive Recommendation (LLM gentle daily read)
+
+---
+Task ID: phase-13
+Agent: main (Z.ai)
+Task: AI Adaptive Recommendation — "Today's gentle read" (LLM + heuristic fallback)
+
+Work Log:
+- lib/ai.ts += generateRecommendation(userId): gathers WHOLE context — energy today + 5-day trend, done today, open/overdue counts, due-within-48h titles, heaviest-rolled task, streak/longest, coins, weekly mode usage, time of day, student name — then one LLM call (READ_PROMPT: ≤48-char headline, 2-3 sentence body, one 5-10min verb microAction; zero shame/nag/pressure language) with robust JSON parse + length clamps
+- heuristicRead(): honest per-signal templates (no-check-in / low+done / low / high / medium) so the read NEVER disappears; fixed nested template-literal interpolation bug (${} inside double quotes printed literally)
+- GET /api/ai/recommend (maxDuration 60); api.getRecommendation(); Recommendation type in types.ts; ai.ts re-exports it from types (no drift)
+- store: readDismissedAt (date string, persisted via partialize) — "Not today" means TODAY; a new day politely brings the read back
+- GentleReadCard: lilac AI surface, pulse skeleton, source badge ("written for you, just now" / "offline, still kind"), font-display headline, "If you want a next step" feather box, Not today ghost button; silent failure (renders nothing on error)
+- Fixed lint error: setState-in-effect (redundant setLoading(true) removed — starts true)
+- E2E verified: real LLM returned contextual read ("Rest is part of the process… Open your notebook to one page"); source badge; Not today → hidden after reload (day-scoped, returns tomorrow); zero console errors; screenshot phase13-read.png
+
+Stage Summary:
+- Every morning now opens with one adaptive paragraph that actually reflects the student's data — with a fallback that never breaks
+- Next: Phase 14 — Student Insights & Analytics view
+
+---
+Task ID: phase-14
+Agent: main (Z.ai)
+Task: Student Insights & Analytics view — patterns, never grades
+
+Work Log:
+- New GET /api/insights: 14-day energy series (null gaps = no check-in, that's allowed), 14-day completions per day, weekly mode counts (PRD order), study stats (courses/assignments/microDone/rolled/letGo), wallet snapshot; rule-based gentle patterns (low-energy wins, fuller-days pattern, most-used mode, streak, proofs, rolled-total) + insufficient-data + empty-rule fallback lines, max 4
+- InsightsView: header "Your patterns, gently · patterns, never grades"; 4 pastel stat tiles (streak/best/coins/proofs, staggered motion); 2 recharts via shadcn ChartContainer — energy area chart (custom Y axis Low/Medium/High, sage, connectNulls=false so gaps show honestly) + completions bar chart (honey, rounded tops); "Which tools you reach for" animated lilac bars; "Gentle patterns" sprout list; "The semester, softly" snapshot; warm empty state for fresh users
+- Nav: PlannerView += "insights"; app-shell NAV 4 items (Today/Insights/Courses/Rewards, Activity icon), mobile grid-cols-3 → grid-cols-4; page.tsx renders InsightsView
+- Patterns rule bar was too strict for moderately-seeded data (0 patterns for Priya) — added always-kind fallback line
+- E2E verified: API aggregates correctly (thin user → insufficient-data pattern), all sections render, 2 chart surfaces, 4 stat tiles, patterns fallback line, 390px no overflow, dark mode (dark:true), zero errors; screenshots phase14-insights/mobile/dark.png
+
+Stage Summary:
+- Analytics exist now without a single judgmental frame — no red, no targets, gaps are honest
+- Next: Phase 15 — Personalized Dashboard + Guided Demo Flow
+
+---
+Task ID: phase-15
+Agent: main (Z.ai)
+Task: Personalized Dashboard + Guided Demo Flow (2-minute tour)
+
+Work Log:
+- CAPACITY/MAX_TASKS moved to types.ts (single source shared client+server; session.ts stays server-only); priority.ts re-exports for existing import paths
+- Today header → personalized dashboard strip: greeting + date + energy line + 3 soft chips — n-day flow (sage, Flame), n open today (honey, ListTodo), X/Y spoons planned (lilac, SpoonGlyph; turns peach "— pick what matters" when over capacity, never red)
+- tour.tsx TourOverlay: 7 steps (welcome → check-in → modes → what-now → insights → rewards → your turn), bottom-docked lilac card, progress dots, Back/Next/Skip/"Start planning"; each step navigates for real (setView) + smooth-scrolls to target (#checkin-heading, #now-heading); spring entrance; "nothing here is a test" copy
+- welcome-view: third CTA "Take the 2-minute tour" (Compass, lilac ghost); enter(withSample, tour) signals onTourStart after login
+- page.tsx: session-scoped tourStep state; logout reset via React render-phase derived-state pattern (avoids setState-in-effect lint rule — effect version was flagged and removed)
+- E2E verified: sign-out → welcome shows 3 CTAs; fresh user "Riya Tour" → tour step 1/7 "Welcome in, Riya"; Next walked all 7 steps — real navigation confirmed (view=Insights w/ 2 charts at step 5, view=Rewards at 6), scroll targets found, finish → tour gone + back on Today; dashboard chips "2-day flow · 3 open today · 4/4 spoons planned" after Medium check-in; zero errors; screenshots phase15-tour-insights/dashboard/spoonchip.png
+
+Stage Summary:
+- The Today view is now a true personalized dashboard; new users can learn the whole app in one 2-minute guided walk
+- Remaining: final QA pass (dark mode, 390px, VLM audit, dev.log) + README/worklog updates
+
+---
+Task ID: phase-final
+Agent: main (Z.ai)
+Task: Final QA — 390px audit, VLM design review, polish fixes, docs update
+
+Work Log:
+- 390px audit found a 4px horizontal bleed on Today; traced via element-hiding binary search to the layout grid missing base grid-cols-1 → implicit auto track got max-content-sized to the widest TaskCard (378px > 358 container). One-class fix: `grid grid-cols-1 gap-6 lg:grid-cols-5`; scrollWidth now exactly 390
+- VLM design audit (4 screens, glm-5v-turbo): overall A- — "exceptionally high-fidelity work… feels like a shipped product from a well-funded startup; micro-copy alone is worth hiring for"; typography 8-9, hierarchy 8-9, color 8-9 across screens
+- Real defects fixed from the audit: energy chart Y-axis "Medium" clipped to "dum" (YAxis width 52→62, verified "Low/Medium/High" render fully); check-in "Change" button 2px optical misalignment (mt-0.5)
+- Subjective micro-notes (icon weights, chart contrast) reviewed and deliberately kept — axis text already uses muted-foreground token, mixes are the soft style
+- README updated: Typography section (Instrument Sans + Fraunces full axes), new "7. The Intelligence Layer (v2)" features section, API table += /api/now, /api/ai/recommend, /api/insights, screenshots table += 5 new files
+- Final health: lint clean, dev.log 0 errors, server 200, browser errors empty, fresh-user E2E (Riya Tour) + tour walkthrough all green
+
+Stage Summary:
+- ALL 6 requested upgrades delivered on the existing aesthetic (phases 10-15):
+  1. AI Adaptive Recommendation (gentle read, LLM + heuristic fallback)
+  2. Smart Priority / Auto Planning (engine + why-chips, anti-shame weights)
+  3. "What should I do now?" (shortlist + sage glow + shrink hand-off)
+  4. Student Insights & Analytics (charts, patterns-never-grades)
+  5. Personalized Dashboard (chips strip) + 2-minute Guided Demo Flow
+  6. Typography glow-up (Instrument Sans + Fraunces true optical sizing + fixed the latent opsz bug)
+- Every feature E2E-verified in a real browser; zero console errors anywhere

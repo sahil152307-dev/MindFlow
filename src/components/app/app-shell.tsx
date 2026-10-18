@@ -1,6 +1,6 @@
 "use client";
 
-import { CalendarRange, LayoutDashboard, Gift } from "lucide-react";
+import { Activity, CalendarRange, Gift, LayoutDashboard } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useMindFlow } from "@/lib/store";
 import { Logo } from "@/components/app/logo";
@@ -12,6 +12,7 @@ import type { PlannerView } from "@/lib/types";
 const NAV: { key: PlannerView; label: string; icon: typeof LayoutDashboard }[] =
   [
     { key: "today", label: "Today", icon: LayoutDashboard },
+    { key: "insights", label: "Insights", icon: Activity },
     { key: "courses", label: "Courses", icon: CalendarRange },
     { key: "rewards", label: "Rewards", icon: Gift },
   ];
@@ -85,7 +86,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         aria-label="Primary mobile"
         className="fixed inset-x-0 bottom-0 z-40 border-t border-border/60 bg-background/90 pb-[env(safe-area-inset-bottom)] backdrop-blur-md md:hidden"
       >
-        <div className="grid h-16 grid-cols-3">
+        <div className="grid h-16 grid-cols-4">
           {NAV.map(({ key, label, icon: Icon }) => (
             <button
               key={key}

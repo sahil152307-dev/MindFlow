@@ -1,11 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
-import { getCurrentUser, startOfDay, daysBetween } from "@/lib/session";
+import { getCurrentUser, startOfDay } from "@/lib/session";
 import type { DayPlan, PlanSuggestion } from "@/lib/types";
-
-/* Spoon capacity per energy level — deliberately gentle. */
-const CAPACITY: Record<string, number> = { low: 2, medium: 4, high: 7 };
-const MAX_TASKS: Record<string, number> = { low: 2, medium: 3, high: 5 };
+import { buildPlan, CAPACITY, type PriorityCandidate } from "@/lib/priority";
 
 const LOW_SUMMARIES = [
   "A low-spoon day — here's the lightest possible way forward.",
@@ -39,7 +36,7 @@ export async function POST(req: NextRequest) {
   const today = startOfDay();
 
   // Candidates: anything open that isn't already planned for another future day
-  const candidates = await db.task.findMany({
+  const rows = await db.task.findMany({
     where: {
       userId: user.id,
       status: { in: ["todo", "doing"] },
@@ -49,7 +46,7 @@ export async function POST(req: NextRequest) {
     orderBy: [{ position: "asc" }, { createdAt: "asc" }],
   });
 
-  if (candidates.length === 0) {
+  if (rows.length === 0) {
     const plan: DayPlan = {
       suggestions: [],
       summary:
@@ -59,96 +56,72 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ plan });
   }
 
-  // Score: due-date urgency first, micro-steps are easier starts,
-  // fewer spoons preferred on low days.
-  const scored = candidates.map((t) => {
-    let score = 0;
-    if (t.assignment) {
-      const daysLeft = daysBetween(today, t.assignment.dueDate);
-      score += Math.max(0, 40 - daysLeft * 4); // closer due date → higher
-      if (daysLeft < 0) score += 12; // past due gets gentle priority
-    }
-    if (t.isMicro) score += 8;
-    if (level === "low") score += (4 - t.spoonCost) * 6;
-    if (level === "high") score += t.spoonCost * 2;
-    if (t.rolledCount > 0) score -= 4; // don't nag rolled tasks
-    return { task: t, score };
-  });
-
-  scored.sort((a, b) => b.score - a.score);
-
-  // Fill the day within capacity, keeping the list short and kind.
-  const capacity = CAPACITY[level];
-  const maxTasks = MAX_TASKS[level];
-  let used = 0;
-  const picked: typeof scored = [];
-
-  for (const s of scored) {
-    if (picked.length >= maxTasks) break;
-    if (used + s.task.spoonCost > capacity) {
-      // On low days, a single 2-spoon task alone is still OK
-      if (!(level === "low" && picked.length === 0 && s.task.spoonCost <= 2)) {
-        continue;
-      }
-    }
-    picked.push(s);
-    used += s.task.spoonCost;
-  }
-
-  // Fallback: if nothing fit (e.g., only 3-spoon tasks on a low day),
-  // suggest the smallest / highest-scored one anyway — something beats nothing.
-  if (picked.length === 0) {
-    picked.push(scored[0]);
-    used = scored[0].task.spoonCost;
-  }
-
-  const suggestions: PlanSuggestion[] = picked.map((s) => ({
-    task: {
-      id: s.task.id,
-      assignmentId: s.task.assignmentId,
-      assignment: s.task.assignment
-        ? {
-            id: s.task.assignment.id,
-            title: s.task.assignment.title,
-            dueDate: s.task.assignment.dueDate,
-            course: null,
-            courseId: s.task.assignment.courseId,
-          }
-        : null,
-      title: s.task.title,
-      notes: s.task.notes,
-      status: s.task.status,
-      spoonCost: s.task.spoonCost,
-      position: s.task.position,
-      isMicro: s.task.isMicro,
-      plannedDate: s.task.plannedDate,
-      completedAt: s.task.completedAt,
-      rolledCount: s.task.rolledCount,
-      createdAt: s.task.createdAt,
-      hasProof: false,
-    },
-    reason: reasonFor(s.task, today),
+  const candidates: PriorityCandidate[] = rows.map((t) => ({
+    id: t.id,
+    title: t.title,
+    spoonCost: t.spoonCost,
+    isMicro: t.isMicro,
+    rolledCount: t.rolledCount,
+    status: t.status,
+    plannedDate: t.plannedDate,
+    position: t.position,
+    assignment: t.assignment
+      ? { dueDate: t.assignment.dueDate, title: t.assignment.title }
+      : null,
   }));
 
+  const { picked, usedSpoons, capacity } = buildPlan(
+    candidates,
+    level,
+    today
+  );
+
+  const byId = new Map(rows.map((t) => [t.id, t]));
+
+  const suggestions: PlanSuggestion[] = picked.map((s) => {
+    const t = byId.get(s.candidate.id)!;
+    return {
+      task: {
+        id: t.id,
+        assignmentId: t.assignmentId,
+        assignment: t.assignment
+          ? {
+              id: t.assignment.id,
+              title: t.assignment.title,
+              dueDate: t.assignment.dueDate,
+              course: null,
+              courseId: t.assignment.courseId,
+            }
+          : null,
+        title: t.title,
+        notes: t.notes,
+        status: t.status,
+        spoonCost: t.spoonCost,
+        position: t.position,
+        isMicro: t.isMicro,
+        plannedDate: t.plannedDate,
+        completedAt: t.completedAt,
+        rolledCount: t.rolledCount,
+        createdAt: t.createdAt,
+        hasProof: false,
+      },
+      reason: s.reasons[0]?.text ?? "Fits today's energy",
+      reasons: s.reasons,
+    };
+  });
+
   const summaries =
-    level === "low" ? LOW_SUMMARIES : level === "medium" ? MED_SUMMARIES : HIGH_SUMMARIES;
+    level === "low"
+      ? LOW_SUMMARIES
+      : level === "medium"
+        ? MED_SUMMARIES
+        : HIGH_SUMMARIES;
 
   const plan: DayPlan = {
     suggestions,
-    summary: `${summaries[Math.floor(Math.random() * summaries.length)]} About ${used} spoon${used === 1 ? "" : "s"} of work.`,
+    summary: `${summaries[Math.floor(Math.random() * summaries.length)]} About ${usedSpoons} spoon${usedSpoons === 1 ? "" : "s"} of work.`,
     capacity,
   };
 
   return NextResponse.json({ plan });
-}
-
-function reasonFor(
-  t: { assignmentId: string | null; isMicro: boolean; spoonCost: number; rolledCount: number },
-  today: Date
-): string {
-  if (t.spoonCost === 1)
-    return "Tiny and quick — a gentle win.";
-  if (t.isMicro) return "A micro-step that's already broken down for you.";
-  if (t.rolledCount > 0) return "It's been patient with you. It can wait a little more if needed.";
-  return "Fits today's energy.";
 }
