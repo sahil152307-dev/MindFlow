@@ -171,3 +171,20 @@ Work Log:
 
 Stage Summary:
 - Deliverable: /home/z/my-project/README.md (~380 lines), fully accurate to the shipped codebase
+
+---
+Task ID: docs-1
+Agent: main (Z.ai)
+Task: Repo docs pack — LICENSE, CONTRIBUTING.md, GitHub Pages site, README sections
+
+Work Log:
+- Copied 5 hero screenshots (today, breakdown, rewards, darkmode, mobile) into docs/assets/ with clean names — Pages only serves files inside docs/
+- LICENSE: standard MIT, "Copyright (c) 2026 MindFlow Contributors" (no-edit default; user can swap name or go proprietary — flagged in summary + README)
+- CONTRIBUTING.md: short by design — 7 ground rules encode the anti-shame contract as review-blocking rules (no red, no alarms, no shame language, lilac AI, tokens-only both themes, reduced motion), setup, "where things go" map, conventions (date math via session helpers, range filters not equality — the phase-5 lesson), PR checklist, kind-review policy
+- docs/_config.yml (primer theme) + docs/index.md: Jekyll landing page — hero tagline, 4-step how-it-works, five-modes table, philosophy block, 5 captioned screenshots, local-run snippet; relative asset paths only, no fake repo URLs
+- README.md: TOC 16→18 items; appended Contributing (links CONTRIBUTING.md + Pages enable steps) and License (MIT + proprietary swap note)
+- Verified all 6 new/edited files land at expected paths
+
+Stage Summary:
+- Repo now ships: README.md, CONTRIBUTING.md, LICENSE (MIT), docs/ GitHub Pages site (zero-config publish)
+- License decision left user-side by design: MIT default, one-file swap to proprietary documented in README

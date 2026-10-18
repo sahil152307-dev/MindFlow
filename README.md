@@ -26,6 +26,8 @@
 14. [Accessibility & Sensory Safety](#accessibility--sensory-safety)
 15. [Screenshots](#screenshots)
 16. [Scope & Trade-offs](#scope--trade-offs)
+17. [Contributing](#contributing)
+18. [License](#license)
 
 ---
 
@@ -405,3 +407,21 @@ What this build is, honestly:
 
 Everything in the PRD's five key features, five modes, and shared planner components is implemented
 and E2E-tested in a real browser — including the fresh-user path, dark mode, and 390px mobile.
+
+## Contributing
+
+MindFlow has a short, explicit set of ground rules — no red, no alarms, no shame language —
+enforced at review time. See [CONTRIBUTING.md](CONTRIBUTING.md) before opening a PR; it also
+contains the setup steps, the "where things go" map, and the PR checklist.
+
+This repository ships with a GitHub Pages project page in [`docs/`](docs/). To publish it:
+**Settings → Pages → Build and deployment → Deploy from a branch → `main` / `/docs`**.
+No other configuration is needed.
+
+## License
+
+Code is released under the [MIT License](LICENSE).
+
+If this project moves toward a commercial release, swap the MIT text for a proprietary
+notice — it is a single file change, and the README section above is the only place that
+references it.
