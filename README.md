@@ -183,7 +183,7 @@ same architecture with the sandbox-available equivalents — same roles, same da
 | FastAPI (Python) backend | **Next.js API Routes** (TypeScript) | Same REST surface; every endpoint listed in [API Reference](#api-reference) |
 | Google Gemini (LLM) | **z-ai-web-dev-sdk** chat completions (`src/lib/ai.ts`) | Same prompting contract, JSON-only responses, server-side |
 | Gemini Vision (proof verification) | **z-ai-web-dev-sdk** VLM (`/api/tasks/[id]/proof`) | Same image-in → structured-assessment-out role |
-| Firebase Firestore | **Prisma + SQLite** (`db/custom.db`) | Same relational domain; Prisma keeps it portable to Postgres/MySQL later |
+| Firebase Firestore | **Prisma + Neon Postgres** | Same relational domain; hosted Postgres persists across Vercel function instances |
 | Firebase Storage / Cloudinary | **Base64 image column** on `Proof` with size guard | Same upload → store → display flow at demo scale |
 | Firebase Auth | **httpOnly cookie session** (90-day) | Same session semantics for the demo |
 
@@ -201,7 +201,7 @@ Zustand store — instant view changes, no page reloads, shared wallet state acr
 Browser (SPA)
   │  fetch (typed client, src/lib/api.ts)
   ▼
-Next.js API Routes  ──►  Prisma ──►  SQLite (db/custom.db)
+Next.js API Routes  ──►  Prisma ──►  Neon Postgres
   │        │
   │        └────────►  z-ai-web-dev-sdk (server-only)
   │                        ├── LLM  : task micro-sequencing   (src/lib/ai.ts)
@@ -234,6 +234,31 @@ Prisma schema at `prisma/schema.prisma`:
 | `Proof` | Base64 image + VLM fields (`verified`, `note`) |
 | `ModeLog` | One row per mode use — powers weekly insights |
 | `GoodieGrab` | One claim per goodie per user (transactional) |
+
+---
+
+## Database Setup
+
+Production uses the Vercel-managed Neon database. Runtime queries use the pooled
+`NEON_DATABASE_URL`; Prisma migrations use the direct `NEON_DATABASE_URL_UNPOOLED`.
+Pull the Development environment before running local database commands:
+
+```bash
+vercel link --yes --scope innovation-avengers --project mind-flow
+vercel env pull .env.local --environment development --yes
+npm run db:generate
+vercel env run --environment development -- npm run db:migrate:deploy
+```
+
+To preserve the existing local SQLite data in Neon, run the one-time import after
+the schema migration:
+
+```bash
+vercel env run --environment development -- npm run db:import-sqlite
+```
+
+The import reads `db/custom.db` without modifying it and skips records already
+present in Neon, so an interrupted import can be retried.
 
 ---
 
@@ -431,8 +456,8 @@ What this build is, honestly:
 
 - **Auth is a 90-day httpOnly cookie session**, not Firebase Auth — same semantics at demo scale,
   and swapping in a provider is isolated to `src/lib/session.ts`
-- **SQLite via Prisma**, not Firestore — the domain is relational (courses → assignments → tasks),
-  and Prisma keeps a migration path to Postgres open
+- **Neon Postgres via Prisma**, not Firestore — the relational data persists across
+  Vercel deployments and serverless function instances
 - **Proofs are stored as base64 rows**, not object storage — right-sized for a demo; the upload
   pipeline (client compression → size guard → store → display) is already in place
 - **Deployment**: the production build emits a standalone server, ready for Vercel/any Node host
